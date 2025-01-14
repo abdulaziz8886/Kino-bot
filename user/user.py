@@ -71,7 +71,7 @@ async def BotStart(message: Message):
                 a += i
             for i in readkino():
                 if str(i[0]) == a:
-                    await bot.send_video(chat_id=message.from_user.id, video=i[1], caption=f'{i[2]}', protect_content = True)
+                    await bot.send_video(chat_id=message.from_user.id, video=i[1], caption=f"{i[2]}", protect_content = True)
                     return
             await message.reply('Bunday kino yoq')
             cnt.clear()
