@@ -19,5 +19,5 @@ async def main():
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-    except:
-        print("tugadi")
+    except Exception as er:
+        logging.error(f"Hatolik yuz berdi{er}")
