@@ -38,3 +38,30 @@ def deleteKino(kod):
         if create:
             cursor.close()
             create.close()
+
+def insertuser(user_id):
+    try:
+        create = connect('dp.sqlite3')
+        cursor = create.cursor()
+        cursor.execute("""INSERT INTO user(user) VALUES (?)""", (user_id,))
+        create.commit()
+    except (Exception, Error) as error:
+        print('xato_insert_teble', error)
+    finally:
+        if create:
+            cursor.close()
+            create.close()
+
+def readuser():
+    try:
+        create = connect('dp.sqlite3')
+        cursor = create.cursor()
+        cursor.execute("""Select * from user""")
+        a = cursor.fetchall()
+        return a
+    except (Exception, Error) as error:
+        print('xato_creat_teble', error)
+    finally:
+        if create:
+            cursor.close()
+            create.close()
