@@ -61,6 +61,28 @@ async def srat(message:Message, state:FSMContext):
 
 
 
+@user_router.message(F.text == 'Reklama')
+async def rek1(message:Message, state : FSMContext):
+    await message.answer('Reklamani menga yuboring')
+    await state.set_state(reklamaForm.rek)
+
+@user_router.message(reklamaForm.rek)
+async def sek2(message:Message, state:FSMContext):
+    if message.photo:
+        await message.answer('Siz rasm yubormaqchishiz rasm uchun izox yozing')
+        await state.set_data({'rasm12' : message.photo[-1].file_id})
+        await state.set_state(reklamaRAsmFORM.rasm)
+    if message.text:
+        for i in readuser():
+            await bot.send_message(chat_id=i[0], text=message.text)
+    
+
+@user_router.message(reklamaRAsmFORM.rasm)
+async def rek2(message:Message, state : FSMContext):
+    data = await state.get_data()
+    for i in readuser():
+        await bot.send_photo(chat_id=i[0], photo=data.get('rasm12'), caption=message.text)
+        
 
 
 
@@ -138,14 +160,143 @@ async def tekshir(call:CallbackQuery, state:FSMContext):
         kino = data.get('kino')
         izoh = data.get('izoh')
         kod = data.get('kod')
-        insertkino(id1=kod, kino=kino, izoh=izoh)
+        insertkino(id1=kod, kino=kino, izoh=izoh, ser='n')
         await call.message.answer("Kino muaffaqiyatli yuklandi", reply_markup=buttom_admin)
     else:
         await call.message.answer('Muaffaqiyatli bekor qilindi', reply_markup=buttom_admin)
 
 
+
+@user_router.message(F.text == "Serial qo'shish")
+async def ser5(message:Message, state:FSMContext):
+    but = InlineKeyboardBuilder()
+    for i in readkino():
+        if i[-1] == 'y':
+            but.button(text=f'{i[2]}', callback_data=f'{i[0]}')
+    but.button(text='Serial qo\'shish', callback_data='Serial qo\'shsih1')
+    but.adjust(2)
+    await message.answer("Seriallardan birini tanlang",reply_markup=but.as_markup())
+    await state.set_state(serialForm.tanlov)
+
+    
+
+
+
+
+@user_router.callback_query(serialForm.tanlov)
+async def ser1(call:CallbackQuery, state:FSMContext):
+    if call.data == 'Serial qo\'shsih1':
+        await call.message.reply('Serial uchun kod kiriting')
+        await state.set_state(serialForm.kod)
+    else:
+        await state.set_data({'ser_id' : call.data})
+        await call.message.answer("Kino faylini yuboring")
+        await state.set_state(addserialFOrm.kino)
+
+@user_router.message(addserialFOrm.kino)
+async def addkimo2(message:Message, state:FSMContext):
+    if message.video:
+        video = message.video.file_id
+        await state.update_data({'kino': video})
+        await message.answer("Izoh qo'shish")
+        await state.set_state(addserialFOrm.izox)
+    else:
+        await message.answer("Siz yuborgan file video emas")
+
+@user_router.message(addserialFOrm.izox)
+async def izox(message:Message, state:FSMContext):
+    await state.update_data({'izoh' : message.text})
+    await message.answer("Qism yuboring")
+    await state.set_state(addserialFOrm.kod)
+    
+cnt = []
+@user_router.message(addserialFOrm.kod)
+async def addkod(message:Message, state:FSMContext):
+    data = await state.get_data()
+    kino_id = message.text
+    for i in readserial():
+        if i[1] == str(data.get('ser_id')):
+            cnt.append(i[0])
+    for i in cnt:
+        if int(i) == int(kino_id):
+            await message.answer('Bunday kod band')
+            await state.set_state(addserialFOrm.kod)
+            return
+    await state.update_data({'kod': kino_id})
+    await bot.send_video(chat_id=message.from_user.id, video=data.get('kino'), caption=data.get('izoh'))
+    await message.answer(f"Kodi {kino_id}\nTasdiqlaysizmi", reply_markup=Buttom_tekshir)
+    await state.set_state(addserialFOrm.final)
+    cnt.clear()
+
+@user_router.callback_query(addserialFOrm.final)
+async def tekshir(call:CallbackQuery, state:FSMContext):
+    data = await state.get_data()
+    xabat = call.data
+    if xabat == 'ha':
+        kino = data.get('kino')
+        ser_id = data.get('ser_id')
+        izoh = data.get('izoh')
+        kod = data.get('kod')
+        insertseril(qism = kod, ser_id=ser_id, kino = kino, izox=izoh)
+        await call.message.answer("Kino muaffaqiyatli yuklandi", reply_markup=buttom_admin)
+    else:
+        await call.message.answer('Muaffaqiyatli bekor qilindi', reply_markup=buttom_admin)
+
+        
+
+
+
+
+@user_router.message(serialForm.kod)
+async def ser2(messsage:Message, state: FSMContext):
+    kod = messsage.text
+    for i in readkino():
+        if int(kod) == int(i[0]):
+            await messsage.answer('Ushbu kod band')
+            return
+    await state.set_data({'kod': kod})
+    await messsage.answer('Serial uchun rasm kiriting')
+    await state.set_state(serialForm.rasm)
+
+
+@user_router.message(serialForm.rasm)
+async def ser3(message:Message, state:FSMContext):
+    if message.photo:
+        await state.update_data({'rasm' : message.photo[-1].file_id})
+        await message.answer('Serial uchun izox qo\'shing ...')
+        await state.set_state(serialForm.izoh)
+    else:
+        await message.answer('salom1')
+
+
+@user_router.message(serialForm.izoh)
+async def ser4(message:Message, state : FSMContext):
+    data = await state.get_data()
+    insertkino(id1=data.get('kod'), kino=data.get('rasm'), izoh=message.text, ser='y')
+    await message.answer('Muvaffaqiyatli', reply_markup=buttom_admin)
+    await state.clear()
+
+
+
+
+@user_router.message(sentSerForm.state1)
+async def SentSer(message:Message, state : FSMContext):
+    data = await state.get_data()
+    for i in readserial():
+        if int(data.get('kino12')) == int(i[1]):
+            if int(message.text) == int(i[0]):
+                await bot.send_video(chat_id=message.from_user.id, video=i[2], caption=f"{i[3]}", protect_content = True)
+                await state.clear()
+                return
+    await message.answer(f'Kechirasiz {message.text} - qism hali botga yuklanmagan')
+    await state.clear()
+            
+
+
+
+
 @user_router.message(F.text.isdigit())
-async def BotStart(message: Message):
+async def BotStart(message: Message, state:FSMContext):
     a = message.text
     user_status = await bot.get_chat_member(chenel_id[0], message.from_user.id)
     if user_status.status == "left":
@@ -157,11 +308,17 @@ async def BotStart(message: Message):
         else:
             for i in readkino():
                 if str(i[0]) == a:
-                    await bot.send_video(chat_id=message.from_user.id, video=i[1], caption=f"{i[2]}", protect_content = True)
-                    return
+                    if i[-1] == 'y':
+                        await bot.send_photo(chat_id=message.from_user.id, photo=i[1], caption=f'{i[2]}')
+                        await message.answer('👆 serial qismini kiriting')
+                        await state.update_data(kino12= a)
+                        await state.set_state(sentSerForm.state1)
+                        return
+                    else:
+                        await bot.send_video(chat_id=message.from_user.id, video=i[1], caption=f"{i[2]}", protect_content = True)
+                        return
             await message.reply('Bunday kino yoq')
             cnt.clear()
-
 
 
 

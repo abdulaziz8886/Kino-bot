@@ -16,7 +16,8 @@ tugma.adjust(1)
 
 buttom_admin = ReplyKeyboardMarkup(
     keyboard = [
-        [KeyboardButton(text='Kino qoshish'), KeyboardButton(text='Kino o\'chirish')]
+        [KeyboardButton(text='Kino qoshish'), KeyboardButton(text='Kino o\'chirish')],
+        [KeyboardButton(text="Serial qo'shish"), KeyboardButton(text='Reklama')]
     ], one_time_keyboard=True, resize_keyboard=True
 )
 

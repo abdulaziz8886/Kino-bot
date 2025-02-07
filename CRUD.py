@@ -1,9 +1,9 @@
 from sqlite3 import connect, Error
-def insertkino(id1, kino, izoh):
+def insertkino(id1, kino, izoh, ser):
     try:
         create = connect('dp.sqlite3')
         cursor = create.cursor()
-        cursor.execute("""INSERT INTO kino(id, kino, izoh) VALUES (?,?, ?)""", (id1,kino, izoh))
+        cursor.execute("""INSERT INTO kino(id, kino, izoh, ser) VALUES (?,?, ?, ?)""", (id1,kino, izoh, ser))
         create.commit()
     except (Exception, Error) as error:
         print('xato_creat_teble', error)
@@ -38,6 +38,35 @@ def deleteKino(kod):
         if create:
             cursor.close()
             create.close()
+
+
+def insertseril(qism, kino, izox, ser_id):
+    try:
+        create = connect('dp.sqlite3')
+        cursor = create.cursor()
+        cursor.execute("""INSERT INTO serial(qism, kino, izox, ser_id) VALUES (?,?,?, ?)""",  (qism, kino, izox, ser_id))
+        create.commit()
+    except (Exception, Error) as error:
+        print('xato_insert_serial', error)
+    finally:
+        if create:
+            cursor.close()
+            create.close()
+
+def readserial():
+    try:
+        create = connect('dp.sqlite3')
+        cursor = create.cursor()
+        cursor.execute("""Select * from serial""")
+        a = cursor.fetchall()
+        return a
+    except (Exception, Error) as error:
+        print('xato_read_serial', error)
+    finally:
+        if create:
+            cursor.close()
+            create.close()
+
 
 def insertuser(user_id):
     try:
